@@ -1,0 +1,75 @@
+import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import axios from "axios";
+import Profile from "../../components/Profile";
+
+const User = ({ match }) => {
+  const [profile, setProfile] = useState({});
+  const [followers, setFollowers] = useState([]);
+  const [repos, setRepos] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(false);
+
+  const getUser = async () => {
+    try {
+      setIsLoading(true);
+      const { data: profile } = await axios(
+        `https://api.github.com/users/${match.params.githubusername}`
+      );
+
+      const { followers_url, repos_url } = profile;
+      const { data: followers } = await axios(followers_url)
+      ;
+      const { data: repos } = await  axios(repos_url);
+ 
+      setProfile(profile);
+      setRepos(repos)
+      setFollowers(followers);
+      // setRepos(repos);
+      setIsLoading(false);
+      console.log(profile);
+    } catch (err) {
+      setError(true);
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    getUser();
+  }, [match.params.githubusername]);
+
+  return (
+    <div>
+      <h1>{match.params.githubusername}</h1>
+      {isLoading && <div>fetching data...</div>}
+      <div style={{ display: "flex" }}>
+        <div>
+          <Profile profile={profile} />
+        </div>
+        <div>
+          <h2>Followers of : {match.params.githubusername} </h2>
+          <ul>
+            {followers.map((follower) => (
+              <li key={follower.login}>
+                {" "}
+                <Link to={`/user/${follower.login}`}> {follower.login}</Link>
+              </li>
+            ))}
+          </ul>
+          <div>
+             <h2>Repos Of {match.params.githubusername}</h2> 
+             <ul>
+              {repos.map((repo) => (
+                <li key={repo.name}>
+                  <Link to={`/repo/repo.name`}> {repo.name} </Link>
+                </li>
+               ) )}
+            </ul> 
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default User;
